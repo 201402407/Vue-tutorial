@@ -1,24 +1,26 @@
-# petnest
+# petNest
+* Vue, typescript 공부 겸 만든 프로젝트
 
-## Project setup
+## Framework
+* Vue.js Framework
+
+## Library
+* vue-router
+* vue-property-decorator
+* vuex
+* style-loader
+* ts-loader
+* vue-loader
+* css-loader
+
+## 개발계 서버 Start
 ```
-yarn install
+npm run serve
 ```
 
-### Compiles and hot-reloads for development
+또는
+
 ```
 yarn serve
 ```
 
-### Compiles and minifies for production
-```
-yarn build
-```
-
-### Lints and fixes files
-```
-yarn lint
-```
-
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
