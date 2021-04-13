@@ -1,13 +1,33 @@
 <template>
   <div id="app">
     <div id="nav">
-      <router-link to="/">Home</router-link> |
-      <router-link to="/about">About</router-link>
+      <bottom-navigation @selected="selectNavigation"></bottom-navigation>
     </div>
     <router-view />
   </div>
 </template>
 
+<script lang="ts">
+import { Vue, Component } from 'vue-property-decorator'
+
+import BottomNavigation from '@/components/BottomNavigation.vue'
+
+@Component({
+  components: {
+    'bottom-navigation': BottomNavigation
+  }
+})
+export default class App extends Vue {
+  private selectedMenu = 'main'
+  private isOpenMenu = false
+
+  private selectNavigation(menu: string) {
+    console.log("[App.vue] selectNavigation Called!")
+    this.selectedMenu = menu
+  }
+}
+
+</script>
 <style>
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
