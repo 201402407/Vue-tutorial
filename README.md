@@ -12,6 +12,11 @@
 * ts-loader
 * vue-loader
 * css-loader
+* vue-template-compiler
+* 
+
+```
+npm install --save css-loader style-loader ts-loader vue-loader vue-template-compiler vue-router
 
 ## 개발계 서버 Start
 ```
