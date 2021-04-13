@@ -24,6 +24,7 @@ export default class App extends Vue {
   private selectNavigation(menu: string) {
     console.log("[App.vue] selectNavigation Called!")
     this.selectedMenu = menu
+    this.$router.push({query : {selectedMenu : this.selectedMenu}}).catch(err => { return err });
   }
 }
 
