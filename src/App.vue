@@ -17,14 +17,14 @@ import BottomNavigation from '@/components/BottomNavigation.vue'
     'bottom-navigation': BottomNavigation
   }
 })
-export default class App extends Vue {
+export default class App extends Vue { 
   private selectedMenu = 'main'
   private isOpenMenu = false
 
   private selectNavigation(menu: string) {
     console.log("[App.vue] selectNavigation Called!")
     this.selectedMenu = menu
-    this.$router.push({query : {selectedMenu : this.selectedMenu}}).catch(err => { return err });
+    this.$router.push({query : {selectedMenu : this.selectedMenu}}).catch(err => { return err }); // 라우터 생성 시 URL Param 추가됨
   }
 }
 
