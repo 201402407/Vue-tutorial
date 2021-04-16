@@ -15,19 +15,18 @@ export default class BottomNavigation extends Vue {
     private actived = 'main'
 
     isActive(selectMenu: string): boolean {
-        console.log("[BottomNavigation.vue] isActive Called!")
-        if(this.actived === selectMenu) {
-            console.log(selectMenu + " 메뉴 선택")
-        }
+        // console.log("[BottomNavigation.vue] isActive Called!")
         return this.actived === selectMenu
     }
 
     moveMenu(menu: string) {
         console.log("[BottomNavigation.vue] moveMenu Called!")
         this.actived = menu
-        const currentPath = this.$router.currentRoute.query?.selectedMenu // TEST 필요
+        const currentPath = this.$router.currentRoute.query?.menu // TEST 필요
         console.log(currentPath)
-        if(currentPath !== menu) this.$emit('selected', menu)
+        if(currentPath !== menu) {
+            this.$emit('selected', menu)
+        }
     }
 }
 

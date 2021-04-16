@@ -1,5 +1,5 @@
 import store from '@/stores/index'
-import { getModule, Module, VuexModule } from 'vuex-module-decorators'
+import { Module, VuexModule, Mutation, Action } from 'vuex-module-decorators'
 import RestSample, { ItemList, ResVo } from '@/services/main/restSample'
 import Vue from 'vue'
 
@@ -8,7 +8,6 @@ export default class MainModule extends VuexModule {
     // 클래스 내부 변수 선언
     itemList!: ItemList
     resVo!: ResVo
-
 
     // itemList  = [
     //     { id: 1, item: '씻기', status: 'clear' },
@@ -20,7 +19,7 @@ export default class MainModule extends VuexModule {
     // 서비스 또는 작업 수행(서버 연동)
     @Action
     async reqMainInfo() {
-        await new RestSample().getMainInfo()    // 여긴 서버 API 통신 함수 호출
+        // await new RestSample().getMainInfo()    // 여긴 서버 API 통신 함수 호출
     }
 
     // Data Store에 저장하는 Annotation

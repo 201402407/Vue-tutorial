@@ -24,7 +24,8 @@ export default class App extends Vue {
   private selectNavigation(menu: string) {
     console.log("[App.vue] selectNavigation Called!")
     this.selectedMenu = menu
-    this.$router.push({query : {selectedMenu : this.selectedMenu}}).catch(err => { return err }); // 라우터 생성 시 URL Param 추가됨
+    this.$router.push("/" + this.selectedMenu)
+    // this.$router.push({query : {selectedMenu : this.selectedMenu}}).catch(err => { return err }); // 라우터 생성 시 URL Param 추가됨
   }
 }
 
