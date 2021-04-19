@@ -10,19 +10,25 @@
         <button @click="storeIncrement">Store increment</button><br> <br>
         <input :value="inputName" @input="ChangeInputName" type="text" placeholder="스토어 값 저장 테스트 - String" @keyup.enter="goStore()"><br>
         <h2>{{ inputName }}</h2>
-
+        <my-button title="Prop 전달 타이틀" @myButtonClick="emitClick"></my-button>
 
     </div>
 </template>
 
 <script lang="ts">
 import { Vue, Component, Emit, Prop, Watch } from 'vue-property-decorator'
+import MyButton from '@/components/MyButton.vue'
 import { TestModule } from '@/stores/modules/test/index'
 // import TestChild from '@/views/test/child'
 
-@Component
+@Component({
+    components: {
+        'my-button' : MyButton
+    }
+})
 export default class Test extends Vue {
-    @Prop({ type: Object, required: true }) readonly propData!: string // Prop은 부모 컴퍼넌트 -> 자식 컴포넌트에 값 전달하는 역할
+
+    // @Prop({ type: Object, required: true }) readonly propData!: string // Prop은 부모 컴퍼넌트 -> 자식 컴포넌트에 값 전달하는 역할
 
     private count = 1
     private inputNum = 0
@@ -45,6 +51,14 @@ export default class Test extends Vue {
         console.log("onClick : " + num);
         this.count = 2;
     }
+    
+    //my-button 과 연결됨
+    emitClick(e: Event) {
+        console.log(e.target);
+        const target = e.target as HTMLInputElement
+        console.log(target.innerText)
+    }
+
 
     get getCount() {
         console.log("count : " + this.count);
