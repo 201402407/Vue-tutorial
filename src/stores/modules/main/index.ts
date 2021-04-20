@@ -1,24 +1,24 @@
-import store from "@/stores/index"
+import store from "@/stores/index";
 import {
   getModule,
   Module,
   VuexModule,
   Mutation,
   Action,
-} from "vuex-module-decorators"
-import RestSample, { ItemList, ResVo } from "@/services/main/restSample"
-import Vue from "vue"
+} from "vuex-module-decorators";
+import RestSample, { ItemList, ResVo } from "@/services/main/restSample";
+import Vue from "vue";
 
 export interface LoginPVO {
-  id: string
-  pwd: string
+  id: string;
+  pwd: string;
 }
 
 @Module({ dynamic: true, name: "mainStore", namespaced: true, store })
 export default class MainStore extends VuexModule {
   // 클래스 내부 변수 선언
-  itemList!: ItemList
-  resVo!: ResVo
+  itemList!: ItemList;
+  resVo!: ResVo;
 
   // itemList  = [
   //     { id: 1, item: '씻기', status: 'clear' },
@@ -30,19 +30,19 @@ export default class MainStore extends VuexModule {
   // 서비스 또는 작업 수행(서버 연동)
   @Action
   async chkLogin(pvo: LoginPVO) {
-    await new RestSample().login(pvo) // 여긴 서버 API 통신 함수 호출
+    await new RestSample().login(pvo); // 여긴 서버 API 통신 함수 호출
   }
 
   // Data Store에 저장하는 Annotation
   @Mutation
   setMainInfos() {
-    Vue.set(this, "itemList", [])
-    Vue.set(this, "resVo", {})
+    Vue.set(this, "itemList", []);
+    Vue.set(this, "resVo", {});
   }
 
   get getResVo() {
-    return this.resVo
+    return this.resVo;
   }
 }
 
-export const MainModule = getModule(MainStore)
+export const MainModule = getModule(MainStore);

@@ -15,6 +15,7 @@ export class HttpService {
       baseURL: "https://maivve.tk:8443/",
       headers: {
         "Cache-Control": "no-cache",
+        "Access-Control-Allow-Origin": "https://maivve.tk:8443",
       },
       adapter: throttleAdapterEnhancer(
         cacheAdapterEnhancer(axios.defaults.adapter as AxiosAdapter)

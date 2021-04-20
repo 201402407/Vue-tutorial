@@ -1,10 +1,10 @@
-import Vue from "vue";
-import VueRouter, { RouteConfig } from "vue-router";
-import Home from "@/views/Home.vue";
-import Test from "@/views/test/index.vue";
-import Main from "@/views/main/index.vue";
+import Vue from "vue"
+import VueRouter, { RouteConfig } from "vue-router"
+import Home from "@/views/Home.vue"
+import Test from "@/views/test/index.vue"
+import Main from "@/views/main/index.vue"
 
-Vue.use(VueRouter);
+Vue.use(VueRouter)
 
 const routes: Array<RouteConfig> = [
   {
@@ -21,13 +21,13 @@ const routes: Array<RouteConfig> = [
     path: "/main",
     name: "Main",
     component: Main,
-  }
-];
+  },
+]
 
 const router = new VueRouter({
   mode: "history",
   base: "/spa",
   routes,
-});
+})
 
-export default router;
+export default router

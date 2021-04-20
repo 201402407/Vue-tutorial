@@ -1,14 +1,10 @@
 <template>
-    
+  <div></div>
 </template>
 
 <script lang="ts">
-import { Vue, Component, Emit } from 'vue-property-decorator'
+import { Vue, Component, Emit } from "vue-property-decorator"
 
 @Component
-export default class TestChild extends Vue {
-
-    
-}
-
+export default class TestChild extends Vue {}
 </script>
