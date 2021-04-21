@@ -40,9 +40,11 @@ export default class Main extends Vue {
     })
   }
 
-  postLogin() {
-    const rvo = MainModule.chkLogin(this.pvo)
+  async postLogin() {
+    const rvo = await MainModule.chkLogin(this.pvo)
     console.log(rvo)
+    console.log(rvo.status)
+    console.log(rvo.data.sampleRVo)
   }
 
   getStoreNum() {
