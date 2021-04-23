@@ -8,17 +8,17 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component } from 'vue-property-decorator'
+import { Vue, Component } from "vue-property-decorator"
 
-import BottomNavigation from '@/components/BottomNavigation.vue'
+import BottomNavigation from "@/components/BottomNavigation.vue"
 
 @Component({
   components: {
-    'bottom-navigation': BottomNavigation
-  }
+    "bottom-navigation": BottomNavigation,
+  },
 })
-export default class App extends Vue { 
-  private selectedMenu = 'main'
+export default class App extends Vue {
+  private selectedMenu = "main"
   private isOpenMenu = false
 
   private selectNavigation(menu: string) {
@@ -28,7 +28,6 @@ export default class App extends Vue {
     // this.$router.push({query : {selectedMenu : this.selectedMenu}}).catch(err => { return err }); // 라우터 생성 시 URL Param 추가됨
   }
 }
-
 </script>
 <style>
 #app {
