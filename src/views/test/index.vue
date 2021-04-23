@@ -89,6 +89,7 @@ export default class Test extends Vue {
         this.count = 2
     }
 
+    // 객체 변경값 탐지를 위함
     get validTempObj() {
         return JSON.parse(JSON.stringify(this.tempObj))
     }
