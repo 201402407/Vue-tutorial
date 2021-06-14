@@ -18,6 +18,7 @@ export default class MyButton extends PageVue {
 
   @Emit("myButtonClick")
   onClick(e: Event) {
+    console.log("zzzzz")
     return e;
   }
 }

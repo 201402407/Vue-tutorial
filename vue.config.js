@@ -1,5 +1,5 @@
 module.exports = {
-  devServer: {
-    proxy: "https://maivve.tk:8443",
-  },
-};
+    devServer: {
+        proxy: "https://maivve.tk:8443",
+    },
+}
