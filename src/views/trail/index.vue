@@ -50,7 +50,8 @@ interface ScheduleType {
 }
 
 interface DistanceType {
-    distance: string[]
+    stations: string[]
+    codes: string[]
     endTime: string
     spendTime: string
 }
@@ -166,12 +167,15 @@ export default class Trail extends Vue {
         }
 
         let result: DistanceType = {
-            distance: [],
+            stations: [],
+            codes: [],
             endTime: '',
             spendTime: ''
         }
-        result.distance.push(this.startStationName)
-        return this.searchSameTrainLine(startStationCode, endStationCode, lineArr, Number(startStationCode.substring(1)), result)
+        result.stations.push(this.startStationName)
+        result.codes.push(this.startStationCode)
+
+        return this.searchSameTrainLine(startStationCode, endStationCode, lineArr, this.getIndexOfStation(startStationCode), result)
     }
 
     // 이분탐색을 통해 시작역에서 탑승한 열차 호 수 구하기
@@ -221,21 +225,25 @@ export default class Trail extends Vue {
         const endStationChar = endStationCode[0]
         const endStartionNumber = this.getIndexOfStation(endStationCode)
         let index = startStationNumber
-        let tempResult = resultDistance
+        let tempResult = JSON.parse(JSON.stringify(resultDistance)) // 실제로 리턴하기 위해 깊은 복사
 
+        // 해당 호선의 열차를 정방향으로 순회
         for (; index < startLineArr.length; index++) {
             if (endStationCode === startLineArr[index].code) {
                 // 목적지에 도착
                 let temp: DistanceType = {
-                    distance: resultDistance.distance,
+                    stations: resultDistance.stations,
+                    codes: resultDistance.codes,
                     endTime: '',
                     spendTime: ''
                 }
 
                 const endTimeStr = String(startLineArr[index].schedule[lineNumber])
+
+                temp.stations.push(this.getStationNameForCode(endStationCode)!)
+                temp.codes.push(endStationCode)
                 temp.endTime = endTimeStr.substring(0, 2).concat(':', endTimeStr.substring(2, 4))
-                temp.distance.push(this.getStationNameForCode(endStationCode)!)
-                tempResult = this.compareDistanceTypeForEndTime(tempResult, temp)
+                tempResult = this.compareDistanceTypeForEndTime(tempResult, temp) // 현재 저장된 최단거리 결과값과 비교
                 break // TODO: 여차하면 for문 다돌게?
             }
 
@@ -243,11 +251,15 @@ export default class Trail extends Vue {
                 // 환승 여부 존재
                 const transferStationCode = startLineArr[index].transferCode
                 let temp: DistanceType = {
-                    distance: resultDistance.distance,
+                    stations: resultDistance.stations,
+                    codes: resultDistance.codes,
                     endTime: '',
                     spendTime: ''
                 }
-                temp.distance.push(this.getStationNameForCode(transferStationCode)!)
+                temp.stations.push(this.getStationNameForCode(transferStationCode)!)
+                temp.codes.push(transferStationCode)
+
+                // 재귀함수 호출해서 환승한 호선 내에서 도착하는지 찾기
                 temp = this.searchSameTrainLine(
                     transferStationCode,
                     endStationCode,
@@ -257,6 +269,7 @@ export default class Trail extends Vue {
                 )!
 
                 if (temp.endTime !== '') {
+                    // 재귀함수 호출 시 도착하는 경우가 있다면, 도착시간을 비교해서 더 짧은 시간을 찾는다.
                     tempResult = this.compareDistanceTypeForEndTime(tempResult, temp)!
                 }
             }
