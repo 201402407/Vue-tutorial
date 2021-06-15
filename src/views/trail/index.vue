@@ -12,7 +12,7 @@
             </option>
         </select>
         출발시각 :
-        <input type="text" placeholder="HH:MM" v-model="startTime" />
+        <input type="text" placeholder="HH:MM" v-model="startTime" @keyup.enter="search" />
         <br />
         <h4>도착지</h4>
         역명 :
@@ -31,7 +31,7 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component, Emit, Watch } from 'vue-property-decorator'
+import { Vue, Component, Watch } from 'vue-property-decorator'
 
 // Map 초기화
 // 역명,코드 Map 생성
@@ -72,13 +72,9 @@ export default class Trail extends Vue {
     private lineNumberType = new Map<string, string>([
         ['i', '1'],
         ['j', '2'],
-        ['k', '3'],
+        ['k', '3']
     ])
-    private lineArrType = new Map<string, Array<ScheduleType>>([
-        ['i', this.arr1],
-        ['j', this.arr2],
-        ['k', this.arr3],
-    ])
+    private lineArrType = new Map<string, Array<ScheduleType>>()
 
     created() {
         // init 후 DOM 추가 전 호출. DOM에 컴포넌트가 MOUNT 되기 전. $el 사용 X
@@ -95,16 +91,18 @@ export default class Trail extends Vue {
         })
     }
 
-    get getStartStationName() {
+    @Watch('startStationName')
+    getStartStationName() {
         this.startStationCode = this.getStationCodeForName(this.startStationName)
-        this.validStationInput()
-        return this.startStationName
     }
 
-    get getEndStationName() {
+    @Watch('endStationName')
+    getEndStationName() {
         this.endStationCode = this.getStationCodeForName(this.endStationName)
+    }
+
+    search() {
         this.validStationInput()
-        return this.endStationName
     }
 
     // HH:MM을 HH, MM으로 나누기
@@ -126,6 +124,11 @@ export default class Trail extends Vue {
 
     getLineArr(stationCodeChar: string) {
         return this.lineArrType.get(stationCodeChar)
+    }
+
+    // 원하는 역명의 인덱스
+    getIndexOfStation(stationCode: string): number {
+        return Number(stationCode.substr(1).replace(/[^(1-9)]/gi, '')) // 0 제거
     }
 
     init() {
@@ -155,7 +158,7 @@ export default class Trail extends Vue {
         // 로직 시작
         let startStationCode = this.startStationCode
         let endStationCode = this.endStationCode
-        let startTime: number = Number(this.startTime.replace(':', ''))
+        let startTime = Number(this.startTime.replace(':', ''))
         let lineArr = this.getLineArr(startStationCode[0])!
         let startTrainIndex = this.searchStartTrainIndex(startStationCode, startTime)
         if (startTrainIndex === -1) {
@@ -165,7 +168,7 @@ export default class Trail extends Vue {
         let result: DistanceType = {
             distance: [],
             endTime: '',
-            spendTime: '',
+            spendTime: ''
         }
         result.distance.push(this.startStationName)
         return this.searchSameTrainLine(startStationCode, endStationCode, lineArr, Number(startStationCode.substring(1)), result)
@@ -180,8 +183,9 @@ export default class Trail extends Vue {
             return -1
         }
 
-        const startScheduleType = lineArr.find((scheduleType) => scheduleType.code === startStationCode)
-        const lineCount = lineArr.length // startStationCode[0] 은 코드명의 알파벳
+        const startScheduleType = lineArr.find(scheduleType => scheduleType.code === startStationCode)!
+        const stationIndex = this.getIndexOfStation(startStationCode)
+        const lineCount = lineArr[stationIndex].schedule.length // startStationCode[0] 은 코드명의 알파벳
         if (lineCount === undefined || lineCount === 0) {
             return -1
         }
@@ -191,11 +195,11 @@ export default class Trail extends Vue {
         let midIndex: number
 
         while (startIndex <= endIndex) {
-            midIndex = (startIndex + endIndex) / 2
-            if (startTime == startScheduleType?.schedule[midIndex]!) {
+            midIndex = Math.floor((startIndex + endIndex) / 2)
+            if (startTime == startScheduleType.schedule[midIndex]!) {
                 return midIndex
             } else {
-                if (startTime < startScheduleType?.schedule[midIndex]!) {
+                if (startTime < startScheduleType.schedule[midIndex]!) {
                     endIndex = midIndex - 1
                 } else {
                     startIndex = midIndex + 1
@@ -213,9 +217,9 @@ export default class Trail extends Vue {
     // 같은 호선 내에서 도착하는지 찾기(출발과 도착의 호선이 다르면 환승 체크해서 재귀)
     searchSameTrainLine(startStationCode: string, endStationCode: string, startLineArr: Array<ScheduleType>, lineNumber: number, resultDistance: DistanceType) {
         const startStationChar = startStationCode[0]
-        const startStationNumber = Number(startStationCode.substr(1))
+        const startStationNumber = this.getIndexOfStation(startStationCode)
         const endStationChar = endStationCode[0]
-        const endStartionNumber = endStationCode.substr(1)
+        const endStartionNumber = this.getIndexOfStation(endStationCode)
         let index = startStationNumber
         let tempResult = resultDistance
 
@@ -225,7 +229,7 @@ export default class Trail extends Vue {
                 let temp: DistanceType = {
                     distance: resultDistance.distance,
                     endTime: '',
-                    spendTime: '',
+                    spendTime: ''
                 }
 
                 const endTimeStr = String(startLineArr[index].schedule[lineNumber])
@@ -241,13 +245,13 @@ export default class Trail extends Vue {
                 let temp: DistanceType = {
                     distance: resultDistance.distance,
                     endTime: '',
-                    spendTime: '',
+                    spendTime: ''
                 }
                 temp.distance.push(this.getStationNameForCode(transferStationCode)!)
                 temp = this.searchSameTrainLine(
                     transferStationCode,
                     endStationCode,
-                    this.getLineArr(transferStationCode)!,
+                    this.getLineArr(transferStationCode[0])!,
                     this.searchStartTrainIndex(transferStationCode, startLineArr[index].schedule[lineNumber]),
                     temp
                 )!
@@ -331,7 +335,6 @@ export default class Trail extends Vue {
     getStationNameForCode(code: string) {
         for (let [key, value] of this.stationCodeMap.entries()) {
             if (value === code) {
-                console.log(key)
                 return key
             }
         }
@@ -374,8 +377,9 @@ export default class Trail extends Vue {
             { code: 'i10', schedule: [955, 1045, 1135, 1225, 1315, 1405], transferCode: 'j12' },
             { code: 'i11', schedule: [1000, 1050, 1140, 1230, 1320, 1410], transferCode: '' },
             { code: 'i12', schedule: [1005, 1055, 1145, 1235, 1325, 1415], transferCode: 'k13' },
-            { code: 'i13', schedule: [1010, 1100, 1150, 1240, 1330, 1420], transferCode: '' },
+            { code: 'i13', schedule: [1010, 1100, 1150, 1240, 1330, 1420], transferCode: '' }
         ]
+        this.lineArrType.set('i', this.arr1)
 
         this.arr2 = [
             // 2호선
@@ -390,8 +394,9 @@ export default class Trail extends Vue {
             { code: 'j09', schedule: [1005, 1105, 1205, 1305, 1405], transferCode: '' },
             { code: 'j10', schedule: [1010, 1110, 1210, 1310, 1410], transferCode: '' },
             { code: 'j11', schedule: [1015, 1115, 1215, 1315, 1415], transferCode: 'k10' },
-            { code: 'j12', schedule: [1020, 1120, 1220, 1320, 1420], transferCode: 'i10' },
+            { code: 'j12', schedule: [1020, 1120, 1220, 1320, 1420], transferCode: 'i10' }
         ]
+        this.lineArrType.set('j', this.arr2)
 
         this.arr3 = [
             // 3호선
@@ -408,8 +413,9 @@ export default class Trail extends Vue {
             { code: 'k11', schedule: [1040, 1120, 1200, 1240, 1320, 1400], transferCode: '' },
             { code: 'k12', schedule: [1045, 1125, 1205, 1245, 1325, 1405], transferCode: '' },
             { code: 'k13', schedule: [1050, 1130, 1210, 1250, 1330, 1410], transferCode: 'i12' },
-            { code: 'k14', schedule: [1100, 1140, 1220, 1300, 1340, 1420], transferCode: '' },
+            { code: 'k14', schedule: [1100, 1140, 1220, 1300, 1340, 1420], transferCode: '' }
         ]
+        this.lineArrType.set('k', this.arr3)
 
         // const arr = [
         //     // schedule array의 index는 1,2,3 ~ 번 순서의 호차
