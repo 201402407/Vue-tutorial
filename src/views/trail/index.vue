@@ -24,9 +24,9 @@
         <br /><br /><br /><br />
         <h3>결과 BOX</h3>
         <br />
-        <h4>경로 :</h4>
-        <h4>도착시각 :</h4>
-        <h4>경과시간 :</h4>
+        <h4>경로 : {{ routes }}</h4>
+        <h4>도착시각 : {{ endTimeResult }}</h4>
+        <h4>경과시간 : {{ spendTimeResult }}</h4>
     </div>
 </template>
 
@@ -53,7 +53,7 @@ interface DistanceType {
     stations: string[]
     codes: string[]
     endTime: string
-    spendTime: string
+    spendTime?: string
 }
 
 @Component
@@ -76,6 +76,12 @@ export default class Trail extends Vue {
         ['k', '3']
     ])
     private lineArrType = new Map<string, Array<ScheduleType>>()
+    private distance: DistanceType = {
+        stations: [],
+        codes: [],
+        endTime: '',
+        spendTime: ''
+    }
 
     created() {
         // init 후 DOM 추가 전 호출. DOM에 컴포넌트가 MOUNT 되기 전. $el 사용 X
@@ -90,6 +96,33 @@ export default class Trail extends Vue {
             // 모든 화면이 렌더링 된 후 호출
             console.log('모든 화면 렌더링 완료!')
         })
+    }
+
+    get routes() {
+        let result = ''
+        for (const index in this.distance.stations) {
+            if (Number(index) === 0) {
+                result = `${this.distance.stations[index]}(출발),`
+                continue
+            }
+
+            if (Number(index) === this.distance.stations.length - 1) {
+                result += `${this.distance.stations[index]}(도착)`
+                continue
+            }
+
+            result += `${this.distance.stations[index]}(환승),`
+        }
+
+        return result
+    }
+
+    get endTimeResult() {
+        return this.distance.endTime
+    }
+
+    get spendTimeResult() {
+        return this.distance.spendTime
     }
 
     @Watch('startStationName')
@@ -141,16 +174,19 @@ export default class Trail extends Vue {
     validStationInput() {
         if (this.startStationName !== '' && this.endStationName !== '' && this.startTime !== '' && this.startTime.length == 5) {
             // 계산 시작
-            const distance = this.carculateTrainDistance()
-            if (!distance) {
+            const distanceResult = this.carculateTrainDistance()
+            if (!distanceResult) {
                 // 경로 미존재
                 alert('경로 미존재')
                 return
             }
 
             // 경로 존재
+            const spendTimeArr: number[] = this.calculateTimeGap(this.startTime, distanceResult.endTime)
+            distanceResult.spendTime = `${spendTimeArr[0]}:${spendTimeArr[1]}`
             alert('경로 존재')
-            console.log(distance)
+            console.log(distanceResult)
+            this.distance = this.deepClone(distanceResult) // 결과 객체 깊은복사
         }
     }
 
@@ -169,13 +205,12 @@ export default class Trail extends Vue {
         let result: DistanceType = {
             stations: [],
             codes: [],
-            endTime: '',
-            spendTime: ''
+            endTime: ''
         }
         result.stations.push(this.startStationName)
         result.codes.push(this.startStationCode)
 
-        return this.searchSameTrainLine(startStationCode, endStationCode, lineArr, this.getIndexOfStation(startStationCode), result)
+        return this.searchSameTrainLine(startStationCode, endStationCode, lineArr, startTrainIndex, result)
     }
 
     // 이분탐색을 통해 시작역에서 탑승한 열차 호 수 구하기
@@ -219,42 +254,50 @@ export default class Trail extends Vue {
     }
 
     // 같은 호선 내에서 도착하는지 찾기(출발과 도착의 호선이 다르면 환승 체크해서 재귀)
-    searchSameTrainLine(startStationCode: string, endStationCode: string, startLineArr: Array<ScheduleType>, lineNumber: number, resultDistance: DistanceType) {
-        const startStationChar = startStationCode[0]
+    searchSameTrainLine(startStationCode: string, endStationCode: string, startLineArr: Array<ScheduleType>, lineNumber: number, currentDistance: DistanceType) {
         const startStationNumber = this.getIndexOfStation(startStationCode)
-        const endStationChar = endStationCode[0]
-        const endStartionNumber = this.getIndexOfStation(endStationCode)
         let index = startStationNumber
-        let tempResult = JSON.parse(JSON.stringify(resultDistance)) // 실제로 리턴하기 위해 깊은 복사
+        let resultDistance = this.deepClone(currentDistance) // 실제로 리턴하기 위해 깊은 복사
 
         // 해당 호선의 열차를 정방향으로 순회
         for (; index < startLineArr.length; index++) {
+            // console.log(`${index} + ${startLineArr[index].code}`)
             if (endStationCode === startLineArr[index].code) {
                 // 목적지에 도착
                 let temp: DistanceType = {
-                    stations: resultDistance.stations,
-                    codes: resultDistance.codes,
-                    endTime: '',
-                    spendTime: ''
+                    stations: this.deepClone(resultDistance.stations),
+                    codes: this.deepClone(resultDistance.codes),
+                    endTime: ''
                 }
 
                 const endTimeStr = String(startLineArr[index].schedule[lineNumber])
-
                 temp.stations.push(this.getStationNameForCode(endStationCode)!)
                 temp.codes.push(endStationCode)
                 temp.endTime = endTimeStr.substring(0, 2).concat(':', endTimeStr.substring(2, 4))
-                tempResult = this.compareDistanceTypeForEndTime(tempResult, temp) // 현재 저장된 최단거리 결과값과 비교
+                resultDistance = this.compareDistanceTypeForEndTime(resultDistance, temp) // 현재 저장된 최단거리 결과값과 비교
                 break // TODO: 여차하면 for문 다돌게?
             }
 
             if (startLineArr[index].transferCode !== '') {
                 // 환승 여부 존재
                 const transferStationCode = startLineArr[index].transferCode
+                let isSame = false
+                // 기존에 해당 호선에서 이동한 적이 있는지 체크(환승 중복 체크)
+                for (const code of resultDistance.codes) {
+                    if (code[0] === transferStationCode[0]) {
+                        isSame = true
+                        break
+                    }
+                }
+                if (isSame) {
+                    continue
+                }
+
+                // 객체 임시 생성
                 let temp: DistanceType = {
-                    stations: resultDistance.stations,
-                    codes: resultDistance.codes,
-                    endTime: '',
-                    spendTime: ''
+                    stations: this.deepClone(resultDistance.stations),
+                    codes: this.deepClone(resultDistance.codes),
+                    endTime: ''
                 }
                 temp.stations.push(this.getStationNameForCode(transferStationCode)!)
                 temp.codes.push(transferStationCode)
@@ -270,12 +313,12 @@ export default class Trail extends Vue {
 
                 if (temp.endTime !== '') {
                     // 재귀함수 호출 시 도착하는 경우가 있다면, 도착시간을 비교해서 더 짧은 시간을 찾는다.
-                    tempResult = this.compareDistanceTypeForEndTime(tempResult, temp)!
+                    resultDistance = this.compareDistanceTypeForEndTime(resultDistance, temp)!
                 }
             }
         }
 
-        return tempResult
+        return resultDistance
     }
 
     // 두 목적지까지의 최단거리 결과 객체 중 더 짧은 거리의 객체 리턴
@@ -345,6 +388,25 @@ export default class Trail extends Vue {
         return map
     }
 
+    // 소비 시간 계산(HH:MM 차이 계산)
+    // @param: HH:MM
+    // @return: number[] {HH, MM}
+    calculateTimeGap(startTime: string, endTime: string): number[] {
+        const startTimeHour = Number(startTime.split(':')[0])
+        const startTimeMinute = Number(startTime.split(':')[1])
+
+        const endTimeHour = Number(endTime.split(':')[0])
+        const endTimeMinute = Number(endTime.split(':')[1])
+
+        const allMinuteGap = (endTimeHour - startTimeHour) * 60 + endTimeMinute - startTimeMinute
+        return [Math.floor(allMinuteGap / 60), allMinuteGap % 60]
+    }
+
+    // TODO: Deep clone 임시
+    deepClone<T>(obj: T): T {
+        return JSON.parse(JSON.stringify(obj)) as T
+    }
+
     getStationNameForCode(code: string) {
         for (let [key, value] of this.stationCodeMap.entries()) {
             if (value === code) {
@@ -365,7 +427,7 @@ export default class Trail extends Vue {
         console.log(name)
         this.stationCodeMap.forEach((value, key, mapObj) => {
             if (key === name) {
-                console.log(`${key} and ${value}`)
+                // console.log(`${key} and ${value}`)
                 temp = value
                 return
             }
